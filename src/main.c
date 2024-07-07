@@ -20,7 +20,7 @@ int main(void)
 {
 	if (init_wifi()){
 		while(1){
-			LOG_INF("Know you can use WIFI for your projects! Project by Jeronimo");
+			LOG_INF("Now you can use WIFI for your projects! Project by Jeronimo <jeronimoagullo97@gmail.com>");
 			k_msleep(10000);
 		}
 	}

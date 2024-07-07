@@ -72,23 +72,26 @@ bool init_wifi(){
 		return false;
 	}
 
-	#ifdef CONFIG_BOARD_ESP32_DEVKITC_WROVER
-	uint32_t raised_event;
-	const void *info;
-	size_t info_len;
-
-	LOG_INF("Waiting for net if being up");
-	int ret = net_mgmt_event_wait_on_iface(net_if_get_default(),
-					   NET_EVENT_IF_UP, &raised_event, &info,
-					   &info_len, K_SECONDS(60));
-
-	if (ret != 0) {
-		LOG_ERR("Timeout: Net if cannot bring up");
-		return false;
+	// Check if the net interface if up. If it is not the case, wait for it
+	if (net_if_flag_is_set(iface, NET_IF_UP)) {
+			LOG_DBG("Net if is already up");
 	} else {
-		LOG_INF("Net if is up");
+		uint32_t raised_event;
+		const void *info;
+		size_t info_len;
+
+		LOG_INF("Waiting for net if being up");
+		int ret = net_mgmt_event_wait_on_iface(net_if_get_default(),
+						NET_EVENT_IF_UP, &raised_event, &info,
+						&info_len, K_SECONDS(60));
+
+		if (ret != 0) {
+			LOG_ERR("Timeout: Net if cannot bring up");
+			return false;
+		} else {
+			LOG_INF("Net if is up");
+		}
 	}
-	#endif
 
 	net_mgmt_init_event_callback(&mgmt_cb, handler,
 				     NET_EVENT_IPV4_ADDR_ADD);
@@ -97,13 +100,13 @@ bool init_wifi(){
 
 	static struct wifi_connect_req_params wifi_conn_params;
 
-    // Wifi parameters
+	// Wifi parameters
 	wifi_conn_params.ssid = WIFI_SSID;
 	wifi_conn_params.ssid_length = strlen(WIFI_SSID);
 	wifi_conn_params.psk  = WIFI_PASSWORD;
 	wifi_conn_params.psk_length  = strlen(WIFI_PASSWORD);
 	wifi_conn_params.channel = WIFI_CHANNEL_ANY;
-	wifi_conn_params.security = WIFI_SECURITY_TYPE_PSK ;
+	wifi_conn_params.security = WIFI_SECURITY_TYPE_PSK;
 
 	if (net_mgmt(NET_REQUEST_WIFI_CONNECT, iface,
 			&wifi_conn_params, sizeof(struct wifi_connect_req_params))) {
